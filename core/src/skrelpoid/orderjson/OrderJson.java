@@ -8,9 +8,9 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.CheckBox;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
-import com.badlogic.gdx.scenes.scene2d.ui.TextArea;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
@@ -25,7 +25,8 @@ public class OrderJson implements ApplicationListener {
 	public Table table;
 	public TextButton start;
 	public CheckBox backup;
-	public TextArea console;
+	public Label console;
+	public ScrollPane scroll;
 	public Sorter sorter;
 
 	private String readme;
@@ -39,8 +40,8 @@ public class OrderJson implements ApplicationListener {
 	}
 
 	private void setUpConsole() {
-		System.setOut(new PrintStream(new ConsoleStream(console, 16)));
-		System.setErr(new PrintStream(new ConsoleStream(console, 16)));
+		System.setOut(new PrintStream(new ConsoleStream(this, 16)));
+		System.setErr(new PrintStream(new ConsoleStream(this, 16)));
 	}
 
 	private void load() {
@@ -56,15 +57,18 @@ public class OrderJson implements ApplicationListener {
 
 		start = new TextButton("Start", skin);
 		backup = new CheckBox("Create Backup", skin);
-		sorter = new Sorter(backup);
+		sorter = new Sorter(this);
 		start.addListener(sorter);
-		console = new TextArea(readme, skin);
+		console = new Label(readme, skin);
+		console.setWrap(true);
+		scroll = new ScrollPane(console, skin);
+		scroll.setOverscroll(false, false);
 		Table consoleTable = new Table();
 		Label consoleLabel = new Label("Console", skin);
 		consoleTable.top();
 		consoleTable.add(consoleLabel).growX().left();
 		consoleTable.row();
-		consoleTable.add(console).grow();
+		consoleTable.add(scroll).grow();
 
 		Table buttonTable = new Table();
 		buttonTable.add(start).grow();
@@ -84,6 +88,7 @@ public class OrderJson implements ApplicationListener {
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 		stage.act();
 		stage.draw();
+		console.setText(console.getText().append(""));
 	}
 
 	@Override
