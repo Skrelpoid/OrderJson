@@ -63,6 +63,12 @@ public class Sorter extends ClickListener implements Runnable {
 
 			ArrayList<JsonValue> list = new ArrayList<JsonValue>();
 			JsonValue temp = jv.child();
+			// Edge case for keywords.json
+			boolean isKeywords = false;
+			if (temp != null && temp.name().equals("Game Dictionary")) {
+				temp = temp.child();
+				isKeywords = true;
+			}
 
 			while (temp != null) {
 				list.add(temp);
@@ -72,9 +78,13 @@ public class Sorter extends ClickListener implements Runnable {
 			System.out.println("Sorting file named " + jsonFile.path());
 			Collections.sort(list, comparator);
 
-			jv.child = list.get(0);
-			temp = jv.child;
-			temp.parent = jv;
+			if (isKeywords) {
+				temp = jv.child.child = list.get(0);
+				temp.parent = jv.child;
+			} else {
+				temp = jv.child = list.get(0);
+				temp.parent = jv;
+			}
 			temp.prev = null;
 			for (int i = 1; i < list.size(); i++) {
 				temp.next = list.get(i);
