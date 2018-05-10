@@ -35,20 +35,24 @@ public class OrderJson implements ApplicationListener {
 	public void create() {
 		load();
 		buildGUI();
+		// stage receives input
 		Gdx.input.setInputProcessor(stage);
 		setUpConsole();
 	}
 
+	// redirect System.out and System.err to GUI
 	private void setUpConsole() {
 		System.setOut(new PrintStream(new ConsoleStream(this, 16)));
 		System.setErr(new PrintStream(new ConsoleStream(this, 16)));
 	}
 
+	// Load skin and readme
 	private void load() {
 		skin = new Skin(Gdx.files.internal(SKIN));
 		readme = Gdx.files.internal("OrderJsonREADME.txt").readString() + "\n";
 	}
 
+	// Create the GUI
 	private void buildGUI() {
 		view = new ExtendViewport(800, 480);
 		stage = new Stage(view);
@@ -58,6 +62,7 @@ public class OrderJson implements ApplicationListener {
 		start = new TextButton("Start", skin);
 		backup = new CheckBox("Create Backup", skin);
 		sorter = new Sorter(this);
+		// When Start is clicked, sorters clicked method is called
 		start.addListener(sorter);
 		console = new Label(readme, skin);
 		console.setWrap(true);
@@ -84,11 +89,11 @@ public class OrderJson implements ApplicationListener {
 
 	@Override
 	public void render() {
+		// Clear the screen
 		Gdx.gl.glClearColor(0.2f, 0.2f, 0.2f, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 		stage.act();
 		stage.draw();
-		console.setText(console.getText().append(""));
 	}
 
 	@Override
