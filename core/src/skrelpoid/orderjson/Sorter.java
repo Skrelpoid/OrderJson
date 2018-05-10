@@ -241,6 +241,13 @@ public class Sorter extends ClickListener implements Runnable {
 			}
 			System.out.println("---------------------------");
 		}
+		// create a log if there are exceptions
+		if (exceptions.size > 0) {
+			System.out.println("---------------------------");
+			System.out.println("A log was created at " + OrderJson.LOG_FILE);
+			app.writeLog();
+			System.out.println("---------------------------");
+		}
 	}
 
 	// get the spacing used in the json file

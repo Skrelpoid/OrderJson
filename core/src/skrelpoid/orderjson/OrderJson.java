@@ -18,6 +18,7 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 public class OrderJson implements ApplicationListener {
 
 	public static final String SKIN = "uiskin.json";
+	public static final String LOG_FILE = "OrderJsonLog.txt";
 
 	public Skin skin;
 	public Stage stage;
@@ -112,5 +113,10 @@ public class OrderJson implements ApplicationListener {
 	@Override
 	public void dispose() {
 		stage.dispose();
+	}
+
+	// writes the log of the console to a file
+	public void writeLog() {
+		Gdx.files.local(LOG_FILE).writeString(console.getText().toString(), false);
 	}
 }
