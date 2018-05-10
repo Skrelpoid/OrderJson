@@ -243,9 +243,8 @@ public class Sorter extends ClickListener implements Runnable {
 		}
 		// create a log if there are exceptions
 		if (exceptions.size > 0) {
-			System.out.println("---------------------------");
-			System.out.println("A log was created at " + OrderJson.LOG_FILE);
-			app.writeLog();
+			app.createLog(60);
+			System.out.println("Creating log, please wait");
 			System.out.println("---------------------------");
 		}
 	}

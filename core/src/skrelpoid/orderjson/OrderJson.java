@@ -30,6 +30,8 @@ public class OrderJson implements ApplicationListener {
 	public ScrollPane scroll;
 	public Sorter sorter;
 
+	private int createLogIn = 0;
+
 	private String readme;
 
 	@Override
@@ -95,6 +97,12 @@ public class OrderJson implements ApplicationListener {
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 		stage.act();
 		stage.draw();
+		if (createLogIn > 0) {
+			createLogIn--;
+			if (createLogIn == 0) {
+				writeLog();
+			}
+		}
 	}
 
 	@Override
@@ -115,8 +123,15 @@ public class OrderJson implements ApplicationListener {
 		stage.dispose();
 	}
 
+	// creates log after inFrames frames have passed
+	public void createLog(int inFrames) {
+		createLogIn = inFrames;
+	}
+
 	// writes the log of the console to a file
-	public void writeLog() {
+	private void writeLog() {
 		Gdx.files.local(LOG_FILE).writeString(console.getText().toString(), false);
+		System.out.println("A log was created at " + OrderJson.LOG_FILE);
+		System.out.println("---------------------------");
 	}
 }
