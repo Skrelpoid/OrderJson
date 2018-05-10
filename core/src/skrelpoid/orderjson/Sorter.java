@@ -24,13 +24,22 @@ public class Sorter extends ClickListener implements Runnable {
 
 		@Override
 		public boolean accept(File file) {
-			return file != null && file.exists() && file.isDirectory() && !endsWithBackup(file)
-					&& file.listFiles(jsonFilter).length > 0;
+			return file != null && file.exists() && file.isDirectory() && !isBackup(file) && isJsonFolder(file);
 		}
 
-		private boolean endsWithBackup(File file) {
+		private boolean isJsonFolder(File file) {
+			File[] children = file.listFiles(jsonFilter);
+			if (children == null) {
+				exceptions.add(new NotSupportedException(
+						file.getName() + " is an invalid format (not a supported directory). "));
+				return false;
+			}
+			return children.length > 0;
+		}
+
+		private boolean isBackup(File file) {
 			String name = file.getName();
-			return name.length() > 6 && name.substring(name.length() - 6).toLowerCase().equals("backup");
+			return name.equals("backup");
 		}
 	};
 
@@ -50,7 +59,11 @@ public class Sorter extends ClickListener implements Runnable {
 
 	private void sortJsonFolder(FileHandle f) {
 		FileHandle[] jsonFiles = f.list(jsonFilter);
-		System.out.println("\nSorting folder named " + f.name());
+		if (f.name() != null && f.name().length() > 0) {
+			System.out.println("\nSorting folder named " + f.name());
+		} else {
+			System.out.println("\nSorting files next to JAR");
+		}
 		for (FileHandle jsonFile : jsonFiles) {
 			sortJson(jsonFile);
 		}
@@ -58,6 +71,8 @@ public class Sorter extends ClickListener implements Runnable {
 
 	private void sortJson(FileHandle jsonFile) {
 		try {
+			String spacing = getSpacing(jsonFile);
+
 			System.out.println("\nParsing file named " + jsonFile.path());
 			JsonValue jv = reader.parse(jsonFile);
 
@@ -94,7 +109,7 @@ public class Sorter extends ClickListener implements Runnable {
 			temp.next = null;
 
 			System.out.println("Saving file named " + jsonFile.path());
-			jsonFile.writeString(prettyPrint(jv), false, "UTF-8");
+			jsonFile.writeString(prettyPrint(jv, spacing), false, "UTF-8");
 
 		} catch (Exception ex) {
 			System.out.println("Encountered ERROR while parsing, sorting or saving");
@@ -102,7 +117,7 @@ public class Sorter extends ClickListener implements Runnable {
 		}
 	}
 
-	private String prettyPrint(JsonValue jv) {
+	private String prettyPrint(JsonValue jv, String spacing) {
 		String str = jv.prettyPrint(JsonWriter.OutputType.json, 0);
 		String[] lines = str.split("\n");
 		StringBuffer buffer = new StringBuffer();
@@ -113,22 +128,38 @@ public class Sorter extends ClickListener implements Runnable {
 			buffer.append(lines[i]);
 		}
 		buffer.append(lines[lines.length - 1]);
-		return buffer.toString();
+		return buffer.toString().replaceAll("\t", spacing);
 	}
 
-	private void findFolders() {
-		System.out.println("\n---------------------------\nSearching for folders with JSON files");
+	private void findFoldersAndFiles() {
+		System.out.println("\n---------------------------\nSearching for JSON files and folders with JSON files");
 		FileHandle local = Gdx.files.local("");
 		folders = local.list(folderFilter);
+		if (local.list(jsonFilter).length > 0) {
+			FileHandle[] temp = new FileHandle[folders.length + 1];
+			System.arraycopy(folders, 0, temp, 0, folders.length);
+			temp[folders.length] = local;
+			folders = temp;
+		}
 
 	}
 
 	private void copyAsBackup() {
-		for (FileHandle f : folders) {
-			System.out.println("Creating backup copy of folder named " + f.name());
-			FileHandle backupCopy = Gdx.files.absolute(f.file().getAbsolutePath() + "backup");
-			if (!backupCopy.exists()) {
-				f.copyTo(backupCopy);
+		for (FileHandle folder : folders) {
+			if (folder.name() != null && folder.name().length() > 0) {
+				System.out.println("Creating backup copy of " + folder.name());
+				FileHandle backupCopy = Gdx.files.local("backup/" + folder.name());
+				if (!backupCopy.exists()) {
+					folder.copyTo(backupCopy);
+				}
+			} else {
+				System.out.println("Creating backup copy of files next to JAR");
+				for (FileHandle f : folder.list(jsonFilter)) {
+					FileHandle backupCopy = Gdx.files.local("backup/" + f.name());
+					if (!backupCopy.exists()) {
+						f.copyTo(backupCopy);
+					}
+				}
 			}
 		}
 	}
@@ -137,7 +168,7 @@ public class Sorter extends ClickListener implements Runnable {
 	public void run() {
 		exceptions = new Array<Exception>();
 		try {
-			findFolders();
+			findFoldersAndFiles();
 			if (app.backup.isChecked()) {
 				copyAsBackup();
 			}
@@ -158,7 +189,34 @@ public class Sorter extends ClickListener implements Runnable {
 		System.out.println("Encountered " + (size > 0 ? size : "no") + " Errors");
 		for (Exception ex : exceptions) {
 			ex.printStackTrace();
+			if (ex instanceof NotSupportedException) {
+				System.out.println(Gdx.files.internal("Unsupported.txt").readString());
+			}
 			System.out.println("---------------------------");
+		}
+	}
+
+	private String getSpacing(FileHandle jsonFile) {
+		try {
+			String spacing = "";
+			String fileContent = jsonFile.readString("UTF-8");
+			int i = fileContent.indexOf("\n") + 1;
+			char c = fileContent.charAt(i++);
+			spacing = String.valueOf(c);
+			if ((Character.isLetterOrDigit(c) && !Character.isWhitespace(c)) || c != '"') {
+				return "  ";
+			}
+			while (true) {
+				if (fileContent.charAt(i) == spacing.charAt(0)) {
+					spacing += fileContent.charAt(i);
+					i++;
+				} else {
+					return spacing;
+				}
+			}
+		} catch (Exception ex) {
+			exceptions.add(ex);
+			return "  ";
 		}
 	}
 
