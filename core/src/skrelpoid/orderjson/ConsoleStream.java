@@ -26,13 +26,6 @@ public class ConsoleStream extends OutputStream {
 		writeIfNeeded();
 	}
 
-	private void writeIfNeeded() {
-		if (index >= buffer.length) {
-			index = 0;
-			Gdx.app.postRunnable(new ConsoleWrite(String.copyValueOf(buffer)));
-		}
-	}
-
 	@Override
 	public void write(byte[] b, int off, int len) throws IOException {
 		// get the string with the specified offset and length
@@ -43,8 +36,15 @@ public class ConsoleStream extends OutputStream {
 
 	}
 
+	private void writeIfNeeded() {
+		if (index >= buffer.length) {
+			index = 0;
+			Gdx.app.postRunnable(new ConsoleWrite(String.copyValueOf(buffer)));
+		}
+	}
+
 	public class ConsoleWrite implements Runnable {
-		String str;
+		private String str;
 
 		public ConsoleWrite(String str) {
 			this.str = str;

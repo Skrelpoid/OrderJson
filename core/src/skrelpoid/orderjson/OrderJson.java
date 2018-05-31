@@ -110,10 +110,16 @@ public class OrderJson implements ApplicationListener {
 		view.update(width, height, true);
 	}
 
+	/**
+	 * Not used
+	 */
 	@Override
 	public void pause() {
 	}
 
+	/**
+	 * Not used
+	 */
 	@Override
 	public void resume() {
 	}
