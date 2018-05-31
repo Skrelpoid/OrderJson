@@ -45,7 +45,7 @@ public class Sorter extends ClickListener implements Runnable {
 
 		private boolean isBackup(File file) {
 			String name = file.getName();
-			return name.equals("backup");
+			return "backup".equals(name);
 		}
 	};
 	// if the file ends with .json return true
